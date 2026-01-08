@@ -31,7 +31,17 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+### Compliance Verification
+- [ ] Spec First: Implementation derived from approved spec and task (per constitution)
+- [ ] No Manual Coding: All implementation via Claude Code, humans edit specs only
+- [ ] Monorepo Architecture: Frontend and backend in same repo with clear separation
+- [ ] Stateless Backend: No session state in memory, all state in DB or passed explicitly
+- [ ] Multi-User by Design: Tasks belong to specific authenticated users
+- [ ] RESTful API Boundary: Frontend/backend communicate via HTTP APIs only
+- [ ] Authentication via JWT: Using Better Auth with verified JWT tokens
+- [ ] Technology Constraints: Using Next.js, FastAPI, PostgreSQL, SQLModel, Better Auth
+- [ ] Core Todo Operations: System supports Add, Delete, Update, View, and Mark Complete operations
+- [ ] Task Management: Tasks persist across sessions and can be organized by users
 
 ## Project Structure
 

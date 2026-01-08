@@ -1,55 +1,60 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+SYNC IMPACT REPORT
+Version change: 1.0.0 → 1.1.0 (Added functional requirements)
+Modified principles: None
+Added sections: Functional Requirements section with core todo operations
+Removed sections: None
+Templates requiring updates:
+  - .specify/templates/plan-template.md ✅ updated to reflect new functional requirements
+  - .specify/templates/spec-template.md ✅ updated to align with functional requirements
+  - .specify/templates/tasks-template.md ✅ updated to reflect functional requirements
+Follow-up TODOs: None
+-->
+# Todo App – Phase 2 Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### Spec First
+No code may be written unless it is derived from an approved spec and task. Specs are the single source of truth.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### No Manual Coding
+All implementation must be generated via Claude Code. Humans may edit specs only.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### Monorepo Architecture
+Frontend and backend live in the same repository. Clear separation of concerns is required.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### Stateless Backend
+Backend services must not store session state in memory. All state must live in the database or be passed explicitly.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### Multi-User by Design
+Every task belongs to a specific authenticated user. Users must never see or modify another user's data.
 
-### [PRINCIPLE_6_NAME]
+### RESTful API Boundary
+Frontend communicates with backend only via HTTP APIs. No shared code or database access between frontend and backend.
 
+### Authentication via JWT
+User authentication is handled via Better Auth. Backend trusts only verified JWT tokens.
 
-[PRINCIPLE__DESCRIPTION]
+## Functional Requirements
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+### Core Todo Operations
+The system MUST support the following essential todo app operations:
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+- **Add Task**: Create new todo items with title, description, due date, and priority
+- **Delete Task**: Remove tasks from the user's list permanently
+- **Update Task**: Modify existing task details including title, description, due date, priority, and other attributes
+- **View Task List**: Display all tasks for the authenticated user with filtering and sorting capabilities
+- **Mark as Complete**: Toggle task completion status (incomplete ↔ complete)
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+### Task Management Features
+- Tasks MUST be associated with individual users and not accessible by other users
+- Tasks MUST persist across sessions and device usage
+- The system MUST allow users to categorize or organize tasks (e.g., by project, priority, or due date)
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+## Technology Constraints
+Frontend: Next.js (App Router), Backend: FastAPI (Python), Database: PostgreSQL (Neon), ORM: SQLModel, Auth: Better Auth + JWT, Development Style: Spec-Driven Development with Spec-Kit Plus
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+All implementation must follow the Core Principles. No code changes without spec and task approval.
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
-
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.1.0 | **Ratified**: 2026-01-08 | **Last Amended**: 2026-01-08
