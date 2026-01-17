@@ -208,3 +208,10 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
+
+## Active Technologies
+- TypeScript 5.x with Next.js 14+ (App Router) + Next.js, React 18+, Tailwind CSS, React Hook Form (optional) (001-nextjs-frontend)
+- Client-side JWT in http-only cookies (preferred) or localStorage (fallback). Mock users stored in localStorage during Phase 2 Frontend development. (001-nextjs-frontend)
+
+## Recent Changes
+- 001-nextjs-frontend: Added TypeScript 5.x with Next.js 14+ (App Router) + Next.js, React 18+, Tailwind CSS, React Hook Form (optional)

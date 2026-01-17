@@ -410,6 +410,209 @@ All technical context unknowns from plan.md have been resolved:
 
 ---
 
+### 11. **Mock Auth Strategy for Phase 2 Frontend** (CRITICAL)
+
+**Decision**: **Mock Better Auth via Service Layer Pattern**
+
+**Rationale**:
+- Phase 2 frontend is developed BEFORE backend integration
+- Better Auth is NOT directly implemented in frontend
+- UI must behave as if Better Auth exists
+- Auth integration must be swappable without UI changes
+- Better Auth is fully integrated in Phase 2 backend implementation
+
+**Implementation Approach**:
+
+```typescript
+// lib/auth/auth-service.ts - Service Interface
+export interface AuthService {
+  signup(email: string, password: string): Promise<AuthResponse>;
+  login(email: string, password: string): Promise<AuthResponse>;
+  logout(): Promise<void>;
+  getCurrentUser(): User | null;
+  getToken(): string | null;
+  isAuthenticated(): boolean;
+}
+
+// lib/auth/mock-auth-service.ts - Mock Implementation (Phase 2 Frontend)
+export class MockAuthService implements AuthService {
+  private readonly MOCK_USERS_KEY = 'mock_users';
+  private readonly MOCK_TOKEN_KEY = 'mock_token';
+
+  async signup(email: string, password: string): Promise<AuthResponse> {
+    // Simulate API delay
+    await delay(500);
+
+    // Check if user exists
+    const users = this.getMockUsers();
+    if (users.some(u => u.email === email)) {
+      throw new Error('User already exists');
+    }
+
+    // Create mock user
+    const user: User = {
+      id: generateMockUUID(),
+      email,
+    };
+
+    users.push({ ...user, password }); // Store in localStorage
+    localStorage.setItem(this.MOCK_USERS_KEY, JSON.stringify(users));
+
+    // Generate mock JWT
+    const token = this.generateMockJWT(user);
+    localStorage.setItem(this.MOCK_TOKEN_KEY, token);
+
+    return { user, token };
+  }
+
+  async login(email: string, password: string): Promise<AuthResponse> {
+    await delay(500);
+
+    const users = this.getMockUsers();
+    const user = users.find(u => u.email === email && u.password === password);
+
+    if (!user) {
+      throw new Error('Invalid credentials');
+    }
+
+    const { password: _, ...userWithoutPassword } = user;
+    const token = this.generateMockJWT(userWithoutPassword);
+    localStorage.setItem(this.MOCK_TOKEN_KEY, token);
+
+    return { user: userWithoutPassword, token };
+  }
+
+  async logout(): Promise<void> {
+    localStorage.removeItem(this.MOCK_TOKEN_KEY);
+  }
+
+  getCurrentUser(): User | null {
+    const token = this.getToken();
+    if (!token) return null;
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return { id: payload.sub, email: payload.email };
+    } catch {
+      return null;
+    }
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem(this.MOCK_TOKEN_KEY);
+  }
+
+  isAuthenticated(): boolean {
+    return this.getToken() !== null;
+  }
+
+  private getMockUsers(): Array<User & { password: string }> {
+    const stored = localStorage.getItem(this.MOCK_USERS_KEY);
+    return stored ? JSON.parse(stored) : [];
+  }
+
+  private generateMockJWT(user: User): string {
+    // Simple base64-encoded mock JWT (NOT cryptographically secure)
+    const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+    const payload = btoa(JSON.stringify({
+      sub: user.id,
+      email: user.email,
+      exp: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+    }));
+    const signature = btoa('mock-signature');
+    return `${header}.${payload}.${signature}`;
+  }
+}
+
+// lib/auth/better-auth-service.ts - Real Implementation (Phase 2 Backend)
+export class BetterAuthService implements AuthService {
+  private readonly apiClient: APIClient;
+
+  async signup(email: string, password: string): Promise<AuthResponse> {
+    const response = await this.apiClient.post('/api/v1/auth/signup', {
+      email,
+      password,
+    });
+
+    // Store token in http-only cookie (handled by backend)
+    return response.data;
+  }
+
+  async login(email: string, password: string): Promise<AuthResponse> {
+    const response = await this.apiClient.post('/api/v1/auth/login', {
+      email,
+      password,
+    });
+
+    return response.data;
+  }
+
+  async logout(): Promise<void> {
+    await this.apiClient.post('/api/v1/auth/logout');
+  }
+
+  getCurrentUser(): User | null {
+    // Read from http-only cookie (backend sets)
+    // Or decode JWT from localStorage if using that strategy
+    const token = this.getToken();
+    if (!token) return null;
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return { id: payload.sub, email: payload.email };
+    } catch {
+      return null;
+    }
+  }
+
+  getToken(): string | null {
+    // Read from http-only cookie or localStorage
+    return localStorage.getItem('auth_token'); // Adjust based on storage strategy
+  }
+
+  isAuthenticated(): boolean {
+    return this.getToken() !== null;
+  }
+}
+
+// lib/auth/index.ts - Factory Pattern
+const USE_MOCK_AUTH = process.env.NEXT_PUBLIC_USE_MOCK_AUTH === 'true';
+
+export function createAuthService(): AuthService {
+  if (USE_MOCK_AUTH) {
+    return new MockAuthService();
+  }
+  return new BetterAuthService();
+}
+
+// Export singleton instance
+export const authService = createAuthService();
+```
+
+**Swap Strategy**:
+1. **Phase 2 Frontend**: Set `NEXT_PUBLIC_USE_MOCK_AUTH=true` → Uses `MockAuthService`
+2. **Phase 2 Backend Integration**: Set `NEXT_PUBLIC_USE_MOCK_AUTH=false` → Uses `BetterAuthService`
+3. **UI Components**: Import `authService` from `lib/auth` → No changes needed
+
+**Benefits**:
+- ✅ UI development proceeds without backend dependency
+- ✅ Auth flows are testable with mock data
+- ✅ Swappable implementation via environment variable
+- ✅ Service interface enforces contract between UI and auth layer
+- ✅ No UI changes when integrating real Better Auth
+
+**Testing Strategy**:
+- Mock service allows full frontend testing
+- Integration tests can use mock service
+- E2E tests can swap to real service when backend is ready
+
+**References**:
+- [Dependency Injection in TypeScript](https://www.typescriptlang.org/docs/handbook/2/classes.html)
+- [Service Layer Pattern](https://martinfowler.com/eaaCatalog/serviceLayer.html)
+- [Better Auth Documentation](https://www.better-auth.com/)
+
+---
+
 ## Next Steps
 
 1. ✅ Research complete (this document)

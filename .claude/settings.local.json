@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.specify/scripts/bash/check-prerequisites.sh:*)",
+      "Bash(.specify/scripts/bash/create-phr.sh:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(test:*)"
+    ]
+  }
+}
